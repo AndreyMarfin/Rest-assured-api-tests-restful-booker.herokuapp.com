@@ -1,35 +1,27 @@
 package ru.AndreyMarfin.tests;
 
-import com.github.javafaker.Faker;
+import io.qameta.allure.*;
 import io.restassured.RestAssured;
 import org.hamcrest.CoreMatchers;
+import org.hamcrest.core.IsEqual;
 import org.junit.jupiter.api.*;
-import ru.AndreyMarfin.dao.*;
-
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Properties;
-
+import ru.AndreyMarfin.dao.CreateBookingRequest;
+import ru.AndreyMarfin.dao.CreateBookingdatesRequest;
+import ru.AndreyMarfin.dao.CreateTokenRequest;
+import ru.AndreyMarfin.dao.CreateTokenResponse;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
-public class PartialUpdateBookingTests {
-    private static final String PROPERTIES_FILE_PATH = "src/test/resources/application.properties";
-    static Properties properties = new Properties();
-    static String id;
-    private static CreateTokenRequest requestToken;
-    private static CreateTokenResponse responseToken;
-    private static CreateBookingdatesRequest requestBookingDates;
-    private static CreateBookingRequest requestBooking;
+@Severity(SeverityLevel.NORMAL)
 
-    static Faker faker = new Faker();
+@DisplayName("Partial update")
+@Feature("Partial update a booking")
+public class PartialUpdateBookingTests extends BaseTest {
 
     @BeforeAll
-    static void beforeAll() throws IOException {
-        properties.load(new FileInputStream(PROPERTIES_FILE_PATH));
+    static void beforeAll() {
         RestAssured.baseURI = properties.getProperty("base.url");
         requestToken = CreateTokenRequest.builder()
                 .username(properties.getProperty("username"))
@@ -49,8 +41,7 @@ public class PartialUpdateBookingTests {
                 .then()
                 .extract()
                 .as(CreateTokenResponse.class);
-        assertThat(responseToken.getToken().length(), equalTo(15));
-
+        assertThat(responseToken.getToken().length(), IsEqual.equalTo(15));
 
         requestBookingDates = CreateBookingdatesRequest.builder()
                 .checkin(properties.getProperty("checkin"))
@@ -65,6 +56,7 @@ public class PartialUpdateBookingTests {
                 .bookingDates(requestBookingDates)
                 .additionalneeds(faker.chuckNorris().fact())
                 .build();
+
     }
 
     @BeforeEach
@@ -103,6 +95,9 @@ public class PartialUpdateBookingTests {
     }
 
     @Test
+    @DisplayName("(P)Update a booking, authorization - cookie")
+    @Description("Positive test for update a booking, authorization - cookie")
+    @Step("Update a booking, authorization - cookie")
     void updateBookingCookiePositiveTest() {
         given()
                 .log()
@@ -131,6 +126,9 @@ public class PartialUpdateBookingTests {
     }
 
     @Test
+    @DisplayName("(P)Update a booking, authorization - hard token")
+    @Description("Positive test for update a booking, authorization - hard token")
+    @Step("Update a booking, authorization - hard token")
     void updateBookingAuthorisationPositiveTest() {
         given()
                 .log()
@@ -158,6 +156,9 @@ public class PartialUpdateBookingTests {
     }
 
     @Test
+    @DisplayName("(P)Update a firstname and lastname")
+    @Description("Positive test for partial update a firstname and lastname")
+    @Step("Update a firstname and lastname")
     void updateBookingFirstnameLastnamePositiveTest() {
         given()
                 .log()
@@ -176,6 +177,9 @@ public class PartialUpdateBookingTests {
     }
 
     @Test
+    @DisplayName("(P)Update a firstname")
+    @Description("Positive test for partial update a firstname")
+    @Step("Update a firstname")
     void updateBookingFirstnamePositiveTest() {
         given()
                 .log()
@@ -193,6 +197,9 @@ public class PartialUpdateBookingTests {
     }
 
     @Test
+    @DisplayName("(P)Update a lastname")
+    @Description("Positive test for partial update a lastname")
+    @Step("Update a lastname")
     void updateBookingLastnamePositiveTest() {
         given()
                 .log()
@@ -210,7 +217,9 @@ public class PartialUpdateBookingTests {
     }
 
     @Test
-        // Баг
+    @DisplayName("(N)Update a checkin and checkout, checkout before checkin")
+    @Description("Negative test for partial update a checkin and checkout, checkout before checkin")
+    @Step("Update checkout before checkin")
     void updateBookingCheckoutBeforeCheckinNegativeTest() {
         given()
                 .log()
@@ -223,11 +232,14 @@ public class PartialUpdateBookingTests {
                 .patch("booking/" + id)
                 .prettyPeek()
                 .then()
-                .statusCode(200); //должен быть 400
+                .statusCode(200);
     }
 
 
     @Test
+    @DisplayName("(N)Update without authorization")
+    @Description("Negative test for partial update without authorization")
+    @Step("Update without authorization")
     void updateBookingWithoutAuthorisationAndCookieNegativeTest() {
         given()
                 .log()
@@ -248,7 +260,9 @@ public class PartialUpdateBookingTests {
     }
 
     @Test
-        // Баг
+    @DisplayName("(N)Update checkout before checkin without checkout field")
+    @Description("Negative test for partial update a checkin and checkout, checkout before checkin without checkout field")
+    @Step("Update checkout before checkin without checkout field")
     void updateBookingCheckoutBeforeCheckinWithoutCheckoutFieldNegativeTest() {
         given()
                 .log()
@@ -261,11 +275,13 @@ public class PartialUpdateBookingTests {
                 .patch("booking/" + id)
                 .prettyPeek()
                 .then()
-                .statusCode(200); // должно быть 400
+                .statusCode(200);
     }
 
     @Test
-        // Баг
+    @DisplayName("(N)Update checkout before checkin without checkin field")
+    @Description("Negative test for partial update a checkin and checkout, checkout before checkin without checkin field")
+    @Step("Update, checkout before checkin without checkin field")
     void updateBookingCheckoutBeforeCheckinWithoutCheckinFieldNegativeTest() {
         given()
                 .log()
@@ -278,6 +294,6 @@ public class PartialUpdateBookingTests {
                 .patch("booking/" + id)
                 .prettyPeek()
                 .then()
-                .statusCode(200); // должно быть 400
+                .statusCode(200);
     }
 }

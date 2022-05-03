@@ -1,48 +1,38 @@
 package ru.AndreyMarfin.tests;
 
-import com.github.javafaker.Faker;
+import io.qameta.allure.*;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import ru.AndreyMarfin.dao.CreateBookingdatesRequest;
 import ru.AndreyMarfin.dao.CreateBookingRequest;
+import ru.AndreyMarfin.dao.CreateBookingdatesRequest;
 import ru.AndreyMarfin.dao.CreateTokenRequest;
 import ru.AndreyMarfin.dao.CreateTokenResponse;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Properties;
-
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsEqual.equalTo;
 
-public class DeleteBookingTests {
-    private static final String PROPERTIES_FILE_PATH = "src/test/resources/application.properties";
-    static Properties properties = new Properties();
-    String id;
-    private static CreateTokenRequest request;
-    private static CreateTokenResponse response;
-    private static CreateBookingdatesRequest bookingDates;
-    private static CreateBookingRequest booking;
+@Severity(SeverityLevel.BLOCKER)
 
-    static Faker faker = new Faker();
+@DisplayName("Delete a booking")
+@Feature("Delete a booking")
+public class DeleteBookingTests extends BaseTest{
 
     @BeforeAll
-    static void beforeAll() throws IOException {
-        properties.load(new FileInputStream(PROPERTIES_FILE_PATH));
+    static void beforeAll() {
         RestAssured.baseURI = properties.getProperty("base.url");
-        request = CreateTokenRequest.builder()
+        requestToken = CreateTokenRequest.builder()
                 .username(properties.getProperty("username"))
                 .password(properties.getProperty("password"))
                 .build();
 
-        response = given()
+        responseToken = given()
                 .log()
                 .all()
                 .header("Content-Type", "application/json")
-                .body(request)
+                .body(requestToken)
                 .expect()
                 .statusCode(200)
                 .when()
@@ -51,22 +41,21 @@ public class DeleteBookingTests {
                 .then()
                 .extract()
                 .as(CreateTokenResponse.class);
-        assertThat(response.getToken().length(), equalTo(15));
+        assertThat(responseToken.getToken().length(), equalTo(15));
 
-        bookingDates = CreateBookingdatesRequest.builder()
+        requestBookingDates = CreateBookingdatesRequest.builder()
                 .checkin(properties.getProperty("checkin"))
                 .checkout(properties.getProperty("checkout"))
                 .build();
 
-        booking = CreateBookingRequest.builder()
+        requestBooking = CreateBookingRequest.builder()
                 .firstname(faker.name().firstName())
                 .lastname(faker.name().lastName())
                 .totalprice(faker.hashCode())
                 .depositpaid(faker.bool().bool())
-                .bookingDates(bookingDates)
+                .bookingDates(requestBookingDates)
                 .additionalneeds(faker.chuckNorris().fact())
                 .build();
-
     }
 
     @BeforeEach
@@ -75,7 +64,7 @@ public class DeleteBookingTests {
                 .log()
                 .all()
                 .header("Content-Type", "application/json")
-                .body(booking)
+                .body(requestBooking)
                 .expect()
                 .statusCode(200)
                 .when()
@@ -88,6 +77,9 @@ public class DeleteBookingTests {
     }
 
     @Test
+    @DisplayName("(P)Deleting a booking with authorization via cookies")
+    @Description("Positive test for deleting a booking with authorization via cookies")
+    @Step("Deleting a booking with authorization via cookies")
     void deleteBookingCookiePositiveTest() {
         given()
                 .log()
@@ -96,7 +88,7 @@ public class DeleteBookingTests {
                 .uri()
                 .log()
                 .body()
-                .header("Cookie", "token=" + response.getToken())
+                .header("Cookie", "token=" + responseToken.getToken())
                 .when()
                 .delete("booking/" + id)
                 .prettyPeek()
@@ -105,6 +97,9 @@ public class DeleteBookingTests {
     }
 
     @Test
+    @DisplayName("(N)Deleting a booking with authorization via hard token")
+    @Description("Negative test for deleting a booking with authorization via hard token")
+    @Step("Deleting a booking with authorization via hard token")
     void deleteBookingAuthorisationNegativeTest() {
         given()
                 .log()
@@ -122,6 +117,9 @@ public class DeleteBookingTests {
     }
 
     @Test
+    @DisplayName("(P)Deleting a booking with authorization via hard token")
+    @Description("Positive test for deleting a booking with authorization via hard token")
+    @Step("Deleting a booking with authorization via hard token")
     void deleteBookingAuthorizationPositiveTest() {
         given()
                 .log()
@@ -139,6 +137,9 @@ public class DeleteBookingTests {
     }
 
     @Test
+    @DisplayName("(N)Deleting a booking without authorization")
+    @Description("Negative test for deleting a booking without authorization")
+    @Step("Deleting a booking without authorization")
     void deleteBookingWithoutAuthorisationNegativeTest() {
         given()
                 .log()

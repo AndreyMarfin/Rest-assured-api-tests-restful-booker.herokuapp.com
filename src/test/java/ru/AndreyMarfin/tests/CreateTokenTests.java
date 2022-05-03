@@ -1,39 +1,39 @@
 package ru.AndreyMarfin.tests;
 
+import io.qameta.allure.*;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import ru.AndreyMarfin.dao.CreateTokenRequest;
 import ru.AndreyMarfin.dao.CreateTokenResponse;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Properties;
-
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
-public class CreateTokenTests {
-    private static final String PROPERTIES_FILE_PATH = "src/test/resources/application.properties";
-    private static CreateTokenRequest request;
-    private static CreateTokenResponse response;
-    static Properties properties = new Properties();
+@Severity(SeverityLevel.BLOCKER)
+
+@DisplayName("Create token")
+@Feature("Create an user token")
+public class CreateTokenTests extends BaseTest {
 
     @BeforeAll
-    static void beforeAll() throws IOException {
-        properties.load(new FileInputStream(PROPERTIES_FILE_PATH));
+    static void beforeSuite() {
         RestAssured.baseURI = properties.getProperty("base.url");
-        request = CreateTokenRequest.builder()
+        requestToken = CreateTokenRequest.builder()
                 .username(properties.getProperty("username"))
                 .password(properties.getProperty("password"))
                 .build();
     }
 
     @Test
+    @DisplayName("(P)Creation token")
+    @Description("Positive test for creation token")
+    @Step("Creation token")
      void createTokenPositiveTest() {
-        response = given()
+        responseToken = given()
                 .log()
                 .method()
                 .log()
@@ -41,7 +41,7 @@ public class CreateTokenTests {
                 .log()
                 .body()
                 .header("Content-Type", "application/json")
-                .body(request)
+                .body(requestToken)
                 .expect()
                 .statusCode(200)
                 .when()
@@ -50,13 +50,16 @@ public class CreateTokenTests {
                 .then()
                 .extract()
                 .as(CreateTokenResponse.class);
-        assertThat(response, is(notNullValue()));
-        assertThat(response.getToken().length(), equalTo(15));
+        assertThat(responseToken, is(notNullValue()));
+        assertThat(responseToken.getToken().length(), equalTo(15));
     }
 
     @Test
+    @DisplayName("(N)Creation token with wrong password")
+    @Description("Negative test for creation token with wrong password")
+    @Step("Creation token with wrong password")
     void createTokenWithAWrongPasswordNegativeTest() {
-        response = given()
+        responseToken = given()
                 .log()
                 .method()
                 .log()
@@ -64,7 +67,7 @@ public class CreateTokenTests {
                 .log()
                 .body()
                 .header("Content-Type", "application/json")
-                .body(request.withPassword("password"))
+                .body(requestToken.withPassword("password"))
                 .expect()
                 .statusCode(200)
                 .when()
@@ -73,13 +76,16 @@ public class CreateTokenTests {
                 .then()
                 .extract()
                 .as(CreateTokenResponse.class);
-        assertThat(response.getReason(), is(notNullValue()));
-        assertThat(response.getReason(), equalTo("Bad credentials"));
+        assertThat(responseToken.getReason(), is(notNullValue()));
+        assertThat(responseToken.getReason(), equalTo("Bad credentials"));
     }
 
     @Test
+    @DisplayName("(N)Creation token with wrong username")
+    @Description("Negative test for creation token with wrong username")
+    @Step("Creation token with wrong username")
     void createTokenWithAWrongUsernameNegativeTest() {
-        response = given()
+        responseToken = given()
                 .log()
                 .method()
                 .log()
@@ -87,7 +93,7 @@ public class CreateTokenTests {
                 .log()
                 .body()
                 .header("Content-Type", "application/json")
-                .body(request.withUsername("admin123"))
+                .body(requestToken.withUsername("admin123"))
                 .expect()
                 .statusCode(200)
                 .when()
@@ -96,7 +102,7 @@ public class CreateTokenTests {
                 .then()
                 .extract()
                 .as(CreateTokenResponse.class);
-        assertThat(response, is(notNullValue()));
-        assertThat(response.getReason(), equalTo("Bad credentials"));
+        assertThat(responseToken, is(notNullValue()));
+        assertThat(responseToken.getReason(), equalTo("Bad credentials"));
     }
 }
