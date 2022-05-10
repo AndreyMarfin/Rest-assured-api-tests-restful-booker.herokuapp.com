@@ -6,6 +6,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.AndreyMarfin.dao.CreateBookingRequest;
 import ru.AndreyMarfin.dao.CreateBookingdatesRequest;
 import ru.AndreyMarfin.dao.CreateTokenRequest;
@@ -20,17 +22,26 @@ import static org.hamcrest.core.IsEqual.equalTo;
 @Feature("Delete a booking")
 public class DeleteBookingTests extends BaseTest{
 
+    final static Logger log = LoggerFactory.getLogger(PartialUpdateBookingTests.class);
+
     @BeforeAll
     static void beforeAll() {
+        log.info("Data preparation");
+        log.info("Create a token");
         RestAssured.baseURI = properties.getProperty("base.url");
         requestToken = CreateTokenRequest.builder()
                 .username(properties.getProperty("username"))
                 .password(properties.getProperty("password"))
                 .build();
+        log.info(requestToken.toString());
 
         responseToken = given()
                 .log()
-                .all()
+                .method()
+                .log()
+                .uri()
+                .log()
+                .body()
                 .header("Content-Type", "application/json")
                 .body(requestToken)
                 .expect()
@@ -42,12 +53,18 @@ public class DeleteBookingTests extends BaseTest{
                 .extract()
                 .as(CreateTokenResponse.class);
         assertThat(responseToken.getToken().length(), equalTo(15));
+        log.info("The token is: " + responseToken.getToken());
 
+        log.info("Data preparation");
+        log.info("Create a booking dates");
         requestBookingDates = CreateBookingdatesRequest.builder()
                 .checkin(properties.getProperty("checkin"))
                 .checkout(properties.getProperty("checkout"))
                 .build();
+        log.info(requestBookingDates.toString());
 
+        log.info("Data preparation");
+        log.info("Create a booking");
         requestBooking = CreateBookingRequest.builder()
                 .firstname(faker.name().firstName())
                 .lastname(faker.name().lastName())
@@ -56,13 +73,18 @@ public class DeleteBookingTests extends BaseTest{
                 .bookingDates(requestBookingDates)
                 .additionalneeds(faker.chuckNorris().fact())
                 .build();
+        log.info(requestBooking.toString());
     }
 
     @BeforeEach
     void setUp() {
         id = given()
                 .log()
-                .all()
+                .method()
+                .log()
+                .uri()
+                .log()
+                .body()
                 .header("Content-Type", "application/json")
                 .body(requestBooking)
                 .expect()
@@ -74,6 +96,7 @@ public class DeleteBookingTests extends BaseTest{
                 .jsonPath()
                 .get("bookingid")
                 .toString();
+        log.info("Booking id is: " + id);
     }
 
     @Test
@@ -81,6 +104,7 @@ public class DeleteBookingTests extends BaseTest{
     @Description("Positive test for deleting a booking with authorization via cookies")
     @Step("Deleting a booking with authorization via cookies")
     void deleteBookingCookiePositiveTest() {
+        log.info("Start test: Deleting a booking with authorization via cookies");
         given()
                 .log()
                 .method()
@@ -94,6 +118,7 @@ public class DeleteBookingTests extends BaseTest{
                 .prettyPeek()
                 .then()
                 .statusCode(201);
+        log.info("End test");
     }
 
     @Test
@@ -101,6 +126,7 @@ public class DeleteBookingTests extends BaseTest{
     @Description("Negative test for deleting a booking with authorization via hard token")
     @Step("Deleting a booking with authorization via hard token")
     void deleteBookingAuthorisationNegativeTest() {
+        log.info("Start test: Deleting a booking with authorization via hard token");
         given()
                 .log()
                 .method()
@@ -114,6 +140,7 @@ public class DeleteBookingTests extends BaseTest{
                 .prettyPeek()
                 .then()
                 .statusCode(403);
+        log.info("End test");
     }
 
     @Test
@@ -121,6 +148,7 @@ public class DeleteBookingTests extends BaseTest{
     @Description("Positive test for deleting a booking with authorization via hard token")
     @Step("Deleting a booking with authorization via hard token")
     void deleteBookingAuthorizationPositiveTest() {
+        log.info("Start test: Deleting a booking with authorization via hard token");
         given()
                 .log()
                 .method()
@@ -134,6 +162,7 @@ public class DeleteBookingTests extends BaseTest{
                 .prettyPeek()
                 .then()
                 .statusCode(201);
+        log.info("End test");
     }
 
     @Test
@@ -141,6 +170,7 @@ public class DeleteBookingTests extends BaseTest{
     @Description("Negative test for deleting a booking without authorization")
     @Step("Deleting a booking without authorization")
     void deleteBookingWithoutAuthorisationNegativeTest() {
+        log.info("Start test: Deleting a booking without authorization");
         given()
                 .log()
                 .method()
@@ -153,6 +183,7 @@ public class DeleteBookingTests extends BaseTest{
                 .prettyPeek()
                 .then()
                 .statusCode(403);
+        log.info("End test");
     }
 }
 
